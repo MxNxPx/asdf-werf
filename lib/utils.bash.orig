@@ -4,7 +4,6 @@ set -euo pipefail
 
 # TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for werf.
 GH_REPO="https://github.com/werf/werf"
-DOWNLOAD_HOST="https://tuf.werf.io"
 TOOL_NAME="werf"
 TOOL_TEST="werf --help"
 
@@ -37,28 +36,13 @@ list_all_versions() {
   list_github_tags
 }
 
-getArch() {
-  ARCH=$(uname -m)
-  case $ARCH in
-  armv*) ARCH="arm" ;;
-  aarch64) ARCH="arm64" ;;
-  x86) ARCH="386" ;;
-  x86_64) ARCH="amd64" ;;
-  i686) ARCH="386" ;;
-  i386) ARCH="386" ;;
-  esac
-  echo "$ARCH"
-}
-
 download_release() {
   local version filename url
   version="$1"
   filename="$2"
-  os="$(uname | tr '[:upper:]' '[:lower:]')"
-  arch="$(getArch)"
 
-  # url based on this example: https://tuf.werf.io/targets/releases/1.2.61/linux-amd64/bin/werf
-  url="${DOWNLOAD_HOST}/targets/releases/${version}/${os}-${arch}/bin/${TOOL_NAME}"
+  # TODO: Adapt the release URL convention for werf
+  url="$GH_REPO/archive/v${version}.tar.gz"
 
   echo "* Downloading $TOOL_NAME release $version..."
   curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
@@ -67,20 +51,20 @@ download_release() {
 install_version() {
   local install_type="$1"
   local version="$2"
-  local install_path="${3}/bin"
+  local install_path="$3"
 
   if [ "$install_type" != "version" ]; then
     fail "asdf-$TOOL_NAME supports release installs only"
   fi
 
   (
-    mkdir -p "${install_path}"
-    cp -r "${ASDF_DOWNLOAD_PATH}"/* "${install_path}"
-    chmod +x "${install_path}/${TOOL_NAME}"
+    mkdir -p "$install_path"
+    cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
+    # TODO: Asert werf executable exists.
     local tool_cmd
     tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
-    test -x "${install_path}/${tool_cmd}" || fail "Expected ${install_path}/${tool_cmd} to be executable."
+    test -x "$install_path/bin/$tool_cmd" || fail "Expected $install_path/bin/$tool_cmd to be executable."
 
     echo "$TOOL_NAME $version installation was successful!"
   ) || (

@@ -8,4 +8,5 @@ plugin_dir=$(dirname "$(dirname "$current_script_path")")
 # shellcheck source=../lib/utils.bash
 source "${plugin_dir}/lib/utils.bash"
 
-list_all_versions | sort_versions | xargs echo
+# only display versions 1.2.43 and above (release when werf install files began being hosted with google storage)
+list_all_versions | sort_versions | xargs echo | sed 's/.* \(1.2.43 .*\)$/\1/'
